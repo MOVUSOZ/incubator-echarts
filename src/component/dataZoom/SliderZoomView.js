@@ -312,6 +312,7 @@ var SliderZoomView = DataZoomView.extend({
             return;
         }
 
+        var dataExtent = data.getDataExtent(info.thisDim);
         var otherDataExtent = data.getDataExtent(otherDim);
         // Nice extent.
         var otherOffset = (otherDataExtent[1] - otherDataExtent[0]) * 0.3;
@@ -321,24 +322,35 @@ var SliderZoomView = DataZoomView.extend({
         ];
         var otherShadowExtent = [0, size[1]];
 
-        var thisShadowExtent = [0, size[0]];
+        var axisOptions = info.thisAxis.model.option;
 
-        var areaPoints = [[size[0], 0], [0, 0]];
+        if (axisOptions !== 'category') {
+            // default data min and max values to dataMin and dataMax
+            var dataMin = typeof axisOptions.min === 'number' ? axisOptions.min : dataExtent[0];
+            var dataMax = typeof axisOptions.max === 'number' ? axisOptions.max : dataExtent[1];
+            var thisShadowExtent = [
+                Math.max((dataExtent[0] - dataMin) / (dataMax - dataMin) * size[0], 0),
+                Math.min((dataExtent[1] - dataMin) / (dataMax - dataMin) * size[0], size[0]),
+            ];
+        }
+        else {
+            var thisShadowExtent = [0, size[0]];
+        }
+
+        var areaPoints = [[thisShadowExtent[1], 0], [thisShadowExtent[0], 0]];
+
         var linePoints = [];
-        var step = thisShadowExtent[1] / (data.count() - 1);
-        var thisCoord = 0;
+        var step = (thisShadowExtent[1] - thisShadowExtent[0]) / (data.count() - 1);
+        var thisCoord = thisShadowExtent[0];
 
         // Optimize for large data shadow
-        var stride = Math.round(data.count() / size[0]);
+        var stride = Math.round(data.count() / (thisShadowExtent[1] - thisShadowExtent[0]));
         var lastIsEmpty;
         data.each([otherDim], function (value, index) {
             if (stride > 0 && (index % stride)) {
                 thisCoord += step;
                 return;
             }
-
-            // FIXME
-            // Should consider axis.min/axis.max when drawing dataShadow.
 
             // FIXME
             // 应该使用统一的空判断？还是在list里进行空判断？
