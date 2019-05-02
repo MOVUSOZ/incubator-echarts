@@ -326,16 +326,20 @@ var SliderZoomView = DataZoomView.extend({
         var areaPoints = [[size[0], 0], [0, 0]];
         var linePoints = [];
         var step = thisShadowExtent[1] / (data.count() - 1);
-        var thisCoord = 0;
+        var steps = 0;
 
         // Optimize for large data shadow
         var stride = Math.round(data.count() / size[0]);
         var lastIsEmpty;
-        data.each([otherDim], function (value, index) {
+        data.each([info.thisDim, otherDim], function (thisValue, value, index) {
             if (stride > 0 && (index % stride)) {
-                thisCoord += step;
+                steps += step;
                 return;
             }
+
+            var thisCoord = axisOptions !== 'category'
+                ? (thisValue - dataMin) / (dataMax - dataMin) * size[0]
+                : steps;
 
             // FIXME
             // Should consider axis.min/axis.max when drawing dataShadow.
@@ -360,7 +364,7 @@ var SliderZoomView = DataZoomView.extend({
             areaPoints.push([thisCoord, otherCoord]);
             linePoints.push([thisCoord, otherCoord]);
 
-            thisCoord += step;
+            steps += step;
             lastIsEmpty = isEmpty;
         });
 
