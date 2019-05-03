@@ -341,16 +341,21 @@ var SliderZoomView = DataZoomView.extend({
 
         var linePoints = [];
         var step = (thisShadowExtent[1] - thisShadowExtent[0]) / (data.count() - 1);
-        var thisCoord = thisShadowExtent[0];
+        var step = thisShadowExtent[1] / (data.count() - 1);
+        var steps = thisShadowExtent[0];
 
         // Optimize for large data shadow
         var stride = Math.round(data.count() / (thisShadowExtent[1] - thisShadowExtent[0]));
         var lastIsEmpty;
-        data.each([otherDim], function (value, index) {
+        data.each([info.thisDim, otherDim], function (thisValue, value, index) {
             if (stride > 0 && (index % stride)) {
-                thisCoord += step;
+                steps += step;
                 return;
             }
+
+            var thisCoord = axisOptions !== 'category'
+                ? (thisValue - dataMin) / (dataMax - dataMin) * size[0]
+                : steps;
 
             // FIXME
             // 应该使用统一的空判断？还是在list里进行空判断？
@@ -372,7 +377,7 @@ var SliderZoomView = DataZoomView.extend({
             areaPoints.push([thisCoord, otherCoord]);
             linePoints.push([thisCoord, otherCoord]);
 
-            thisCoord += step;
+            steps += step;
             lastIsEmpty = isEmpty;
         });
 
