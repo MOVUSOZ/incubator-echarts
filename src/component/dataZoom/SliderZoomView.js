@@ -340,8 +340,8 @@ var SliderZoomView = DataZoomView.extend({
         var areaPoints = [[thisShadowExtent[1], 0], [thisShadowExtent[0], 0]];
 
         var linePoints = [];
+        var linePointGroups = [linePoints];
         var step = (thisShadowExtent[1] - thisShadowExtent[0]) / (data.count() - 1);
-        var step = thisShadowExtent[1] / (data.count() - 1);
         var steps = thisShadowExtent[0];
 
         // Optimize for large data shadow
@@ -367,11 +367,11 @@ var SliderZoomView = DataZoomView.extend({
             // Attempt to draw data shadow precisely when there are empty value.
             if (isEmpty && !lastIsEmpty && index) {
                 areaPoints.push([areaPoints[areaPoints.length - 1][0], 0]);
-                linePoints.push([linePoints[linePoints.length - 1][0], 0]);
             }
             else if (!isEmpty && lastIsEmpty) {
                 areaPoints.push([thisCoord, 0]);
-                linePoints.push([thisCoord, 0]);
+                linePoints = [];
+                linePointGroups.push(linePoints);
             }
 
             areaPoints.push([thisCoord, otherCoord]);
@@ -392,12 +392,15 @@ var SliderZoomView = DataZoomView.extend({
             silent: true,
             z2: -20
         }));
-        this._displayables.barGroup.add(new graphic.Polyline({
-            shape: {points: linePoints},
-            style: dataZoomModel.getModel('dataBackground.lineStyle').getLineStyle(),
-            silent: true,
-            z2: -19
-        }));
+
+        for (var i = 0; i < linePointGroups.length; i++) {
+            this._displayables.barGroup.add(new graphic.Polyline({
+                shape: {points: linePointGroups[i]},
+                style: dataZoomModel.getModel('dataBackground.lineStyle').getLineStyle(),
+                silent: true,
+                z2: -19
+            }));
+        }
     },
 
     _prepareDataShadowInfo: function () {
