@@ -17,6 +17,7 @@
 * under the License.
 */
 
+var samplingFactor = 0.2; // ~pixels per sample. tune the amount of sampling seed
 
 var samplers = {
     average: function (frame) {
@@ -84,7 +85,7 @@ export default function (seriesType) {
                 var extent = baseAxis.getExtent();
                 // Coordinste system has been resized
                 var size = extent[1] - extent[0];
-                var rate = Math.round(data.count() / size);
+                var rate = Math.round(samplingFactor * data.count() / size);
                 if (rate > 1) {
                     var sampler;
                     if (typeof sampling === 'string') {
